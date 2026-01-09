@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>OHYUNYOUNG</title>
+  <link rel="stylesheet" href="style.css?v=2" />
+</head>
+<body>
+  <div class="container">
+    <nav>
+      <a href="contact.html">연락</a>
+      <a href="work.html">작업</a>
+    </nav>
+
+    <div class="speech-bubble">
+      <p>안녕하세요. 오윤영입니다.</p>
+      <p>전시를 기획하고 있습니다.</p>
+      <p>방문해 주셔서 감사합니다.</p>
+
+      <button class="bubble-emoji-btn" type="button" aria-label="smile">☺</button>
+
+      <div class="sticker-toast" aria-live="polite">on</div>
+      <button class="clean-btn" type="button">비우기</button>
+    </div>
+<br>
+    <div class="contact-info">
+      <p>이메일: <a href="mailto:560arte@gmail.com">560arte@gmail.com</a></p>
+      <p>인스타: <a href="https://instagram.com/560_oo" target="_blank" rel="noopener">@560_oo</a></p>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const btn = document.querySelector(".bubble-emoji-btn");
+      const bubble = document.querySelector(".speech-bubble");
+      const toast = document.querySelector(".sticker-toast");
+      const cleanBtn = document.querySelector(".clean-btn");
+      if (!btn) return;
+
+      let clickCount = 0;
+      let stickerMode = false;
+
+      const emojis = [
+        "🍀","✨","💛","🌿","🫧","⭐","💫","🐈","🦕","🔥","🌈","🏆","🎁","🎉","💕","💥","💡","💣","☃️","🍿",
+        "🌙","🌞","☁️","🌧️","🌊","⚡","🕊️","🐾","🗨️","🧡","🤍","🩶","💙","💜","🖤"
+      ];
+
+      function showToast() {
+        if (!toast) return;
+        toast.classList.remove("show");
+        void toast.offsetWidth;
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 1600);
+      }
+
+      function spawnEmoji(isSticker){
+        const rect = btn.getBoundingClientRect();
+
+        const el = document.createElement("span");
+        el.className = "emoji-pop " + (isSticker ? "emoji-sticker" : "emoji-float");
+        el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+
+        const drift = (Math.random() * 30 - 15);
+        el.style.setProperty("--drift-x", drift + "px");
+
+        const spread = stickerMode ? 40 : 0;
+        const randX = (Math.random() * 2 - 1) * spread;
+        const randY = (Math.random() * 2 - 1) * spread;
+
+        let startX = rect.left + rect.width / 2 + randX;
+        let startY = rect.top  + rect.height / 2 + randY;
+
+        const margin = 20;
+        startX = Math.max(margin, Math.min(window.innerWidth - margin, startX));
+        startY = Math.max(margin, Math.min(window.innerHeight - margin, startY));
+
+        el.style.left = startX + "px";
+        el.style.top  = startY + "px";
+
+        document.body.appendChild(el);
+
+        if (!isSticker) {
+          el.addEventListener("animationend", () => el.remove());
+          return;
+        }
+
+        el.addEventListener("animationend", () => {
+          const driftX = parseFloat(getComputedStyle(el).getPropertyValue("--drift-x")) || 0;
+          const riseY  = 70;
+
+          el.style.left = (parseFloat(el.style.left) + driftX) + "px";
+          el.style.top  = (parseFloat(el.style.top)  - riseY) + "px";
+
+          el.style.animation = "none";
+          el.style.filter = "none";
+          el.style.opacity = "1";
+        });
+      }
+
+      btn.addEventListener("click", () => {
+        clickCount += 1;
+
+        if (clickCount === 7) {
+          stickerMode = true;
+          if (bubble) bubble.classList.add("sticker-on");
+          showToast();
+        }
+
+        spawnEmoji(stickerMode);
+      });
+
+      if (cleanBtn) {
+        cleanBtn.addEventListener("click", () => {
+          document.querySelectorAll(".emoji-sticker").forEach(el => el.remove());
+        });
+      }
+
+      // 드래그(스티커만)
+      let draggingEl = null;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      document.addEventListener("pointerdown", (e) => {
+        const t = e.target;
+        if (!(t instanceof Element)) return;
+        if (!t.classList.contains("emoji-sticker")) return;
+
+        draggingEl = t;
+        const left = parseFloat(draggingEl.style.left) || 0;
+        const top  = parseFloat(draggingEl.style.top)  || 0;
+
+        offsetX = e.clientX - left;
+        offsetY = e.clientY - top;
+
+        draggingEl.setPointerCapture(e.pointerId);
+      });
+
+      document.addEventListener("pointermove", (e) => {
+        if (!draggingEl) return;
+
+        let x = e.clientX - offsetX;
+        let y = e.clientY - offsetY;
+
+        const pad = 10;
+        x = Math.max(pad, Math.min(window.innerWidth  - pad, x));
+        y = Math.max(pad, Math.min(window.innerHeight - pad, y));
+
+        draggingEl.style.left = x + "px";
+        draggingEl.style.top  = y + "px";
+      });
+
+      document.addEventListener("pointerup", () => {
+        draggingEl = null;
+      });
+    })();
+  </script>
+</body>
+</html>
