@@ -80,6 +80,7 @@ p {
 .ex-thumb {
   width: 100%;
   aspect-ratio: 3 / 4; /* 포스터 비율 통일 (핵심) */
+ border-radius: 20px;  /* 둥근 모서리 */
   overflow: hidden;
 }
 
@@ -397,6 +398,15 @@ p {
   cursor: grabbing;
 }
 
-.emoji-pop.emoji-sticker{
-  font-size: 20px;
+/* ===== Suika: explode animation ===== */
+.emoji-sticker.exploding{
+  pointer-events: none;
+  animation: explodePop 380ms ease-out forwards;
 }
+
+@keyframes explodePop{
+  0%   { transform: translate(-50%, -50%) scale(1);   opacity: 1; filter: blur(0px); }
+  100% { transform: translate(-50%, -50%) scale(1.9); opacity: 0; filter: blur(2px); }
+}
+
+

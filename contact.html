@@ -22,136 +22,254 @@
       <div class="sticker-toast" aria-live="polite">on</div>
       <button class="clean-btn" type="button">비우기</button>
     </div>
-<br>
+
+    <br />
+
     <div class="contact-info">
       <p>이메일: <a href="mailto:560arte@gmail.com">560arte@gmail.com</a></p>
       <p>인스타: <a href="https://instagram.com/560_oo" target="_blank" rel="noopener">@560_oo</a></p>
     </div>
   </div>
 
-  <script>
-    (function () {
-      const btn = document.querySelector(".bubble-emoji-btn");
-      const bubble = document.querySelector(".speech-bubble");
-      const toast = document.querySelector(".sticker-toast");
-      const cleanBtn = document.querySelector(".clean-btn");
-      if (!btn) return;
+ <script>
+(function () {
+  const btn = document.querySelector(".bubble-emoji-btn");
+  const bubble = document.querySelector(".speech-bubble");
+  const toast = document.querySelector(".sticker-toast");
+  const cleanBtn = document.querySelector(".clean-btn");
+  if (!btn || !bubble) return;
 
-      let clickCount = 0;
-      let stickerMode = false;
+  let clickCount = 0;
+  let stickerMode = false;
 
-      const emojis = [
-        "🍀","✨","💛","🌿","🫧","⭐","💫","🐈","🦕","🔥","🌈","🏆","🎁","🎉","💕","💥","💡","💣","☃️","🍿",
-        "🌙","🌞","☁️","🌧️","🌊","⚡","🕊️","🐾","🗨️","🧡","🤍","🩶","💙","💜","🖤"
-      ];
+  // ===== 스티커/수박 합체 설정 =====
+  const BASE_SIZE = 20;
+  const GROW = 10;
+  const MAX_LEVEL = 5;
+  const RISE_Y = 70;
+  const MERGE_DIST = 26;
+  const MERGE_COOLDOWN_MS = 80;
 
-      function showToast() {
-        if (!toast) return;
-        toast.classList.remove("show");
-        void toast.offsetWidth;
-        toast.classList.add("show");
-        setTimeout(() => toast.classList.remove("show"), 1600);
+  const emojis = [
+    "🍀","✨","💛","🌿","🫧","⭐","💫","🐈","🦕","🔥","🌈","🏆","🎁","🎉","💕","💥","💡","💣","☃️","🍿",
+    "🌙","🌞","☁️","🌧️","🌊","⚡","🕊️","🐾","🗨️","🧡","🤍","🩶","💙","💜","🖤"
+  ];
+
+  function showToast(ms = 1600) {
+    if (!toast) return;
+    toast.classList.remove("show");
+    void toast.offsetWidth;
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), ms);
+  }
+
+  function sizeForLevel(level){
+    return BASE_SIZE + (level - 1) * GROW;
+  }
+
+  function getCenter(el){
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width/2, y: r.top + r.height/2 };
+  }
+
+  function explode(el){
+    el.classList.add("exploding");
+    el.addEventListener("animationend", () => el.remove(), { once: true });
+  }
+
+  function bakeStickerPosition(el){
+    const driftX = parseFloat(getComputedStyle(el).getPropertyValue("--drift-x")) || 0;
+    const left = parseFloat(el.style.left) || 0;
+    const top  = parseFloat(el.style.top)  || 0;
+
+    el.style.left = (left + driftX) + "px";
+    el.style.top  = (top  - RISE_Y) + "px";
+
+    el.style.animation = "none";
+    el.style.filter = "none";
+    el.style.opacity = "1";
+  }
+
+  function makeStickerAt(x, y, emoji, level){
+    const el = document.createElement("span");
+    el.className = "emoji-pop emoji-sticker";
+    el.textContent = emoji;
+    el.dataset.level = String(level);
+
+    const drift = (Math.random() * 30 - 15);
+    el.style.setProperty("--drift-x", drift + "px");
+
+    el.style.left = x + "px";
+    el.style.top  = y + "px";
+    el.style.fontSize = sizeForLevel(level) + "px";
+
+    document.body.appendChild(el);
+
+    el.addEventListener("animationend", () => {
+      if (!document.body.contains(el)) return;
+      bakeStickerPosition(el);
+      setTimeout(() => tryMerge(el), MERGE_COOLDOWN_MS);
+    }, { once: true });
+
+    return el;
+  }
+
+  // 같은 이모지면 레벨 달라도 합체 (새 레벨 = max + 1)
+  function tryMerge(target){
+    if (!target || !target.classList.contains("emoji-sticker")) return;
+    if (!document.body.contains(target)) return;
+
+    const emoji = (target.textContent || "").trim();
+    const level = parseInt(target.dataset.level || "1", 10);
+    const { x: tx, y: ty } = getCenter(target);
+
+    let best = null;
+    let bestD = Infinity;
+    let bestLevel = 1;
+
+    document.querySelectorAll(".emoji-sticker").forEach((el) => {
+      if (el === target) return;
+      if (!document.body.contains(el)) return;
+      if ((el.textContent || "").trim() !== emoji) return;
+
+      const lv = parseInt(el.dataset.level || "1", 10);
+      const c = getCenter(el);
+      const d = Math.hypot(c.x - tx, c.y - ty);
+
+      if (d < bestD) {
+        bestD = d;
+        best = el;
+        bestLevel = lv;
       }
+    });
 
-      function spawnEmoji(isSticker){
-        const rect = btn.getBoundingClientRect();
+    if (!best) return;
 
-        const el = document.createElement("span");
-        el.className = "emoji-pop " + (isSticker ? "emoji-sticker" : "emoji-float");
-        el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    const threshold = MERGE_DIST + (sizeForLevel(level) + sizeForLevel(bestLevel)) * 0.12;
+    if (bestD > threshold) return;
 
-        const drift = (Math.random() * 30 - 15);
-        el.style.setProperty("--drift-x", drift + "px");
+    const c1 = getCenter(target);
+    const c2 = getCenter(best);
+    const mx = (c1.x + c2.x) / 2;
+    const my = (c1.y + c2.y) / 2;
 
-        const spread = stickerMode ? 40 : 0;
-        const randX = (Math.random() * 2 - 1) * spread;
-        const randY = (Math.random() * 2 - 1) * spread;
+    target.remove();
+    best.remove();
 
-        let startX = rect.left + rect.width / 2 + randX;
-        let startY = rect.top  + rect.height / 2 + randY;
+    const newLevel = Math.max(level, bestLevel) + 1;
 
-        const margin = 20;
-        startX = Math.max(margin, Math.min(window.innerWidth - margin, startX));
-        startY = Math.max(margin, Math.min(window.innerHeight - margin, startY));
+    if (newLevel >= MAX_LEVEL) {
+      const boom = makeStickerAt(mx, my, emoji, newLevel);
+      explode(boom);
+      return;
+    }
 
-        el.style.left = startX + "px";
-        el.style.top  = startY + "px";
+    makeStickerAt(mx, my, emoji, newLevel);
+  }
 
-        document.body.appendChild(el);
+  function spawnEmoji(isSticker){
+    const rect = btn.getBoundingClientRect();
 
-        if (!isSticker) {
-          el.addEventListener("animationend", () => el.remove());
-          return;
-        }
+    const el = document.createElement("span");
+    el.className = "emoji-pop " + (isSticker ? "emoji-sticker" : "emoji-float");
+    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
 
-        el.addEventListener("animationend", () => {
-          const driftX = parseFloat(getComputedStyle(el).getPropertyValue("--drift-x")) || 0;
-          const riseY  = 70;
+    const drift = (Math.random() * 30 - 15);
+    el.style.setProperty("--drift-x", drift + "px");
 
-          el.style.left = (parseFloat(el.style.left) + driftX) + "px";
-          el.style.top  = (parseFloat(el.style.top)  - riseY) + "px";
+    const spread = stickerMode ? 120 : 0;
+    const randX = (Math.random() * 2 - 1) * spread;
+    const randY = (Math.random() * 2 - 1) * spread;
 
-          el.style.animation = "none";
-          el.style.filter = "none";
-          el.style.opacity = "1";
-        });
-      }
+    let startX = rect.left + rect.width / 2 + randX;
+    let startY = rect.top  + rect.height / 2 + randY;
 
-      btn.addEventListener("click", () => {
-        clickCount += 1;
+    const margin = 20;
+    startX = Math.max(margin, Math.min(window.innerWidth - margin, startX));
+    startY = Math.max(margin, Math.min(window.innerHeight - margin, startY));
 
-        if (clickCount === 7) {
-          stickerMode = true;
-          if (bubble) bubble.classList.add("sticker-on");
-          showToast();
-        }
+    el.style.left = startX + "px";
+    el.style.top  = startY + "px";
 
-        spawnEmoji(stickerMode);
-      });
+    document.body.appendChild(el);
 
-      if (cleanBtn) {
-        cleanBtn.addEventListener("click", () => {
-          document.querySelectorAll(".emoji-sticker").forEach(el => el.remove());
-        });
-      }
+    if (!isSticker) {
+      el.addEventListener("animationend", () => el.remove(), { once: true });
+      return;
+    }
 
-      // 드래그(스티커만)
-      let draggingEl = null;
-      let offsetX = 0;
-      let offsetY = 0;
+    el.dataset.level = "1";
+    el.style.fontSize = sizeForLevel(1) + "px";
 
-      document.addEventListener("pointerdown", (e) => {
-        const t = e.target;
-        if (!(t instanceof Element)) return;
-        if (!t.classList.contains("emoji-sticker")) return;
+    el.addEventListener("animationend", () => {
+      if (!document.body.contains(el)) return;
+      bakeStickerPosition(el);
+      setTimeout(() => tryMerge(el), MERGE_COOLDOWN_MS);
+    }, { once: true });
+  }
 
-        draggingEl = t;
-        const left = parseFloat(draggingEl.style.left) || 0;
-        const top  = parseFloat(draggingEl.style.top)  || 0;
+  // 클릭: 7번째부터 스티커 모드
+  btn.addEventListener("click", () => {
+    clickCount += 1;
 
-        offsetX = e.clientX - left;
-        offsetY = e.clientY - top;
+    if (clickCount === 7) {
+      stickerMode = true;
+      bubble.classList.add("sticker-on");
+      showToast(1600);
+    }
 
-        draggingEl.setPointerCapture(e.pointerId);
-      });
+    spawnEmoji(stickerMode);
+  });
 
-      document.addEventListener("pointermove", (e) => {
-        if (!draggingEl) return;
+  // 비우기
+  if (cleanBtn) {
+    cleanBtn.addEventListener("click", () => {
+      document.querySelectorAll(".emoji-sticker").forEach(el => el.remove());
+    });
+  }
 
-        let x = e.clientX - offsetX;
-        let y = e.clientY - offsetY;
+  // 스티커 드래그 + 놓으면 합체 체크
+  let draggingEl = null;
+  let offsetX = 0;
+  let offsetY = 0;
 
-        const pad = 10;
-        x = Math.max(pad, Math.min(window.innerWidth  - pad, x));
-        y = Math.max(pad, Math.min(window.innerHeight - pad, y));
+  document.addEventListener("pointerdown", (e) => {
+    const t = e.target;
+    if (!(t instanceof Element)) return;
+    if (!t.classList.contains("emoji-sticker")) return;
 
-        draggingEl.style.left = x + "px";
-        draggingEl.style.top  = y + "px";
-      });
+    draggingEl = t;
+    const left = parseFloat(draggingEl.style.left) || 0;
+    const top  = parseFloat(draggingEl.style.top)  || 0;
 
-      document.addEventListener("pointerup", () => {
-        draggingEl = null;
-      });
+    offsetX = e.clientX - left;
+    offsetY = e.clientY - top;
+
+    draggingEl.setPointerCapture(e.pointerId);
+  });
+
+  document.addEventListener("pointermove", (e) => {
+    if (!draggingEl) return;
+
+    let x = e.clientX - offsetX;
+    let y = e.clientY - offsetY;
+
+    const pad = 10;
+    x = Math.max(pad, Math.min(window.innerWidth  - pad, x));
+    y = Math.max(pad, Math.min(window.innerHeight - pad, y));
+
+    draggingEl.style.left = x + "px";
+    draggingEl.style.top  = y + "px";
+  });
+
+  document.addEventListener("pointerup", () => {
+    if (!draggingEl) return;
+    tryMerge(draggingEl);
+    draggingEl = null;
+  });
+
+
+
     })();
   </script>
 </body>
