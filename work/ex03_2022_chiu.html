@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>전시_엎지른 시간을 담아내다</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <div class="container">
+
+<nav>
+  <a href="../contact.html">연락</a>
+  <a href="../work.html">작업</a>
+</nav>
+
+
+    <div class="detail">
+
+      <!-- 왼쪽: 이미지 스트립 -->
+      <div class="detail-images">
+        <img src="../images/exhibition/ex03_2022_chiu/0.jpg" alt="">
+        <img src="../images/exhibition/ex03_2022_chiu/1.jpg" alt="">
+        <img src="../images/exhibition/ex03_2022_chiu/2.jpg" alt="">
+        <img src="../images/exhibition/ex03_2022_chiu/3.jpg" alt="">
+        <img src="../images/exhibition/ex03_2022_chiu/4.png" alt="">
+        <img src="../images/exhibition/ex03_2022_chiu/cover.jpg" alt="">
+      </div>
+
+      <!-- 오른쪽: 텍스트 칼럼 -->
+      <div class="detail-text">
+        <p class="meta">2022. 12. 8. - 2022. 12. 18.</p>
+
+        <h1>엎지른 시간을 담아내다</h1>
+
+
+        <p>장소: 예술공간: 치우림(値遇滲)
+        <p>작가: 공혜린, 김세현, 오윤영, 정예진<p>
+        기획: 오윤영<p>
+        디자인: 김세현<p>
+
+        <br>
+-치우(値遇):우연히 만남<p>
+-림(滲):스며들고 흐르다<p>
+        &nbsp;&nbsp;<b><치우림 値遇滲></b>은 서로 우연히 만남이라는 뜻을 가진 ‘치우(値遇)’와 스며들고 흐른다는 뜻을 가진 ‘림(滲)’의 합성어이다.
+        &nbsp;&nbsp;치우림은 오랜 시간을 거쳐 생활공간에서 빈집으로, 예술공간으로 변화하며 예술가와 관람객이 우연하게 만나 소통하는 공간이 된다.<p>
+        &nbsp;&nbsp;이 과정에서 흘러나온 모두의 이야기들은 보는 이에게 부딪히고 스며들어 새로운 울림을 만들어낸다.</p>
+
+<br>
+<b>《엎지른 시간을 담아내다》</b>
+        <p><br>
+1. ’엎지른 시간 = 담아낸 시간‘ <p>
+2. ’과거 ← 현재 ← 미래‘
+        <br>
+
+        <p>&nbsp;&nbsp;과거는 기억이라는 마법으로 현재와 공존한다. 쌓여 있는 과거와 현재들의 덩어리는 물방울처럼 합쳐져 미래가 된다.<p>
+
+        &nbsp;&nbsp;치우림의 시간은 탁자 위에 올려진 물잔처럼 흐르지 않은채 고요히 담겨있다.<p>
+
+        &nbsp;&nbsp;우리는 이곳에서 물잔을 엎지르고 흩트려 새로운 사건을 만들어낸다. 시간의 잔재가 쌓이고 뒤섞인 공간에서 물방울들은 다시금 조립되며 흐른다. 물질로 나타난 의식과 행위는 경험이 되어 각기 다른 시간 속에 살아가는 관람자 각자만의 물잔에 담겨나간다.<p>
+
+        &nbsp;&nbsp;생활공간은 잠시 멈춰 있는 빈집이 되었고, 이는 ’엎지른 시간을 담아내다‘를 통해 감천동의 예술공간으로 변모한다. 치우림은 얽히고설킨 시간 속에서 약동하며 모두의 이야기를 연결짓는다.<p>
+
+
+
+      </div>
+
+    </div> <!-- detail 끝 -->
+
+  </div> <!-- container 끝 -->
+
+  <!-- 이미지 확대 레이어 (container 밖에 있어야 함) -->
+<div id="lightbox">
+  <div class="lb-inner">
+    <button class="lb-prev">&#10094;</button>
+    <img id="lightbox-img" src="" alt="">
+    <button class="lb-next">&#10095;</button>
+  </div>
+</div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const images = Array.from(document.querySelectorAll('.detail-images img'));
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightbox-img');
+  const prevBtn = document.querySelector('.lb-prev');
+  const nextBtn = document.querySelector('.lb-next');
+
+  let currentIndex = 0;
+
+  function openLightbox(index) {
+    currentIndex = index;
+    lightboxImg.src = images[currentIndex].src;
+    lightbox.style.display = 'flex';
+  }
+
+  images.forEach((img, index) => {
+    img.style.cursor = 'zoom-in';
+    img.addEventListener('click', () => {
+      openLightbox(index);
+    });
+  });
+
+  prevBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    currentIndex = (currentIndex - 1 + images.length) % images.length;
+    lightboxImg.src = images[currentIndex].src;
+  });
+
+  nextBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    currentIndex = (currentIndex + 1) % images.length;
+    lightboxImg.src = images[currentIndex].src;
+  });
+
+  lightbox.addEventListener('click', () => {
+    lightbox.style.display = 'none';
+  });
+});
+</script>
+
+
+</body>
+</html>

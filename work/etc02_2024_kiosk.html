@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>프로젝트_키오스크 트레이닝 센터</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <div class="container">
+
+<nav>
+  <a href="../contact.html">연락</a>
+  <a href="../work.html">작업</a>
+</nav>
+
+
+    <div class="detail">
+
+      <!-- 왼쪽: 이미지 스트립 -->
+      <div class="detail-images">
+        <img src="../images/etc/etc02_2024_kiosk/cover.jpg" alt="">
+        <img src="../images/etc/etc02_2024_kiosk/1.jpg" alt="">
+        <img src="../images/etc/etc02_2024_kiosk/2.jpg" alt="">
+        <img src="../images/etc/etc02_2024_kiosk/3.jpg" alt="">
+        <img src="../images/etc/etc02_2024_kiosk/4.jpg" alt="">
+        <img src="../images/etc/etc02_2024_kiosk/5.jpg" alt="">
+        <img src="../images/etc/etc02_2024_kiosk/6.jpg" alt="">
+        <img src="../images/etc/etc02_2024_kiosk/7.jpg" alt="">
+        <img src="../images/etc/etc02_2024_kiosk/8.jpg" alt="">
+        <img src="../images/etc/etc02_2024_kiosk/9.jpg" alt="">
+        <img src="../images/etc/etc02_2024_kiosk/10.jpg" alt="">
+        <img src="../images/etc/etc02_2024_kiosk/11.jpg" alt="">
+        <img src="../images/etc/etc02_2024_kiosk/12.jpg" alt="">
+        <img src="../images/etc/etc02_2024_kiosk/13.jpg" alt="">
+        <img src="../images/etc/etc02_2024_kiosk/14.jpg" alt="">
+        <img src="../images/etc/etc02_2024_kiosk/15.jpg" alt="">
+        <img src="../images/etc/etc02_2024_kiosk/16.jpg" alt="">
+        <img src="../images/etc/etc02_2024_kiosk/17.jpg" alt="">
+        <img src="../images/etc/etc02_2024_kiosk/18.jpg" alt="">
+        <img src="../images/etc/etc02_2024_kiosk/19.jpg" alt="">
+        <img src="../images/etc/etc02_2024_kiosk/20.jpg" alt="">
+      </div>
+
+      <!-- 오른쪽: 텍스트 칼럼 -->
+      <div class="detail-text">
+        <p class="meta">2024. 3. 15. - 2024. 12. 21.</p>
+
+        <h1>프로젝트_키오스크 트레이닝 센터</h1>
+
+
+        <p>작가: 김동찬, 김윤호, 발레리티리, 전보경, 최지목, 한솔<p>
+        <p>프로젝트 기획: 김도플, 오윤영<p>
+        <p>개발자: 박진희
+        <p>인터뷰 및 번역: 최수현
+        <p>협력: 홍티예술촌, 홍티아트센터
+        <p>후원: 한국문화예술위원회 시각예술 창작산실
+       <p> 도록 링크: https://drive.google.com/file/d/1H3ufRMwA7sFSuZckLKvhBQURWyGPz8tY/view?usp=sharing
+        <br>
+<br>
+<p>▶ 기획초대전_김윤호 《뻥이요~》
+
+<p>▶ 상반기 레지던시 결과보고전_김동찬 《뒤에 놓인 바퀴》
+	<p>&nbsp;&nbsp;&nbsp;&nbsp;김동찬_홍티예술촌 연계 포트폴리오 토크
+	<p>&nbsp;&nbsp;&nbsp;&nbsp;김남수 평론가x김동찬(에시앙과 알바) <센터링> 행사
+
+<p>▶ 기획전_전보경, 최지목, 한솔 《키오스크 트레이닝 센터》
+
+<p>▶ 하반기 레지던시 결과보고전_발레리 티 리 《9개의 길들여진 꼬리와 이야기들》
+	<p>&nbsp;&nbsp;&nbsp;&nbsp;발레리 티 리_홍티아트센터 연계 포트폴리오 토크
+	<p>&nbsp;&nbsp;&nbsp;&nbsp;오정은 평론가x발레리 티 리 「혀와 그물」 비평
+
+      </div>
+
+    </div> <!-- detail 끝 -->
+
+  </div> <!-- container 끝 -->
+
+  <!-- 이미지 확대 레이어 (container 밖에 있어야 함) -->
+<div id="lightbox">
+  <div class="lb-inner">
+    <button class="lb-prev">&#10094;</button>
+    <img id="lightbox-img" src="" alt="">
+    <button class="lb-next">&#10095;</button>
+  </div>
+</div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const images = Array.from(document.querySelectorAll('.detail-images img'));
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightbox-img');
+  const prevBtn = document.querySelector('.lb-prev');
+  const nextBtn = document.querySelector('.lb-next');
+
+  let currentIndex = 0;
+
+  function openLightbox(index) {
+    currentIndex = index;
+    lightboxImg.src = images[currentIndex].src;
+    lightbox.style.display = 'flex';
+  }
+
+  images.forEach((img, index) => {
+    img.style.cursor = 'zoom-in';
+    img.addEventListener('click', () => {
+      openLightbox(index);
+    });
+  });
+
+  prevBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    currentIndex = (currentIndex - 1 + images.length) % images.length;
+    lightboxImg.src = images[currentIndex].src;
+  });
+
+  nextBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    currentIndex = (currentIndex + 1) % images.length;
+    lightboxImg.src = images[currentIndex].src;
+  });
+
+  lightbox.addEventListener('click', () => {
+    lightbox.style.display = 'none';
+  });
+});
+</script>
+
+
+</body>
+</html>

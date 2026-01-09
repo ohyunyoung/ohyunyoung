@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>프로젝트_알로록 도로록 아미의 빛깔들</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <div class="container">
+
+<nav>
+  <a href="../contact.html">연락</a>
+  <a href="../work.html">작업</a>
+</nav>
+
+
+    <div class="detail">
+
+      <!-- 왼쪽: 이미지 스트립 -->
+      <div class="detail-images">
+        <img src="../images/etc/eetc01_2023_amidong/0.jpg" alt="">
+        <img src="../images/etc/etc01_2023_amidong/1.jpg" alt="">
+        <img src="../images/etc/etc01_2023_amidong/2.jpg" alt="">
+        <img src="../images/etc/etc01_2023_amidong/3.jpg" alt="">
+        <img src="../images/etc/etc01_2023_amidong/4.jpg" alt="">
+        <img src="../images/etc/etc01_2023_amidong/5.jpg" alt="">
+        <img src="../images/etc/etc01_2023_amidong/6.jpg" alt="">
+      </div>
+
+      <!-- 오른쪽: 텍스트 칼럼 -->
+      <div class="detail-text">
+        <p class="meta">2022. 12. 8. - 2022. 12. 18.</p>
+
+        <h1>프로젝트_알로록 도로록 아미의 빛깔들</h1>
+
+
+        <p>장소: 아미문화학습관
+        <p>연계작가: 안효경, 백주아<p>
+        기획: 서가연<p>
+        기획보조: 오윤영, 정혜정<p>
+        후원: 부산광역시 부산경제진흥원 청년생활실험 리빙랩
+
+        <br>
+<br>
+<p> 2023 아미동 공공예술 프로젝트
+<p> - 안효경 <이름이 흩날리는 모빌 만들기> 
+<p> - 백주아 <물감이 도르륵>
+<p> - 참여자 일동 《알로록 도로록 아미의 빛깔들》 전시
+
+      </div>
+
+    </div> <!-- detail 끝 -->
+
+  </div> <!-- container 끝 -->
+
+  <!-- 이미지 확대 레이어 (container 밖에 있어야 함) -->
+<div id="lightbox">
+  <div class="lb-inner">
+    <button class="lb-prev">&#10094;</button>
+    <img id="lightbox-img" src="" alt="">
+    <button class="lb-next">&#10095;</button>
+  </div>
+</div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const images = Array.from(document.querySelectorAll('.detail-images img'));
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightbox-img');
+  const prevBtn = document.querySelector('.lb-prev');
+  const nextBtn = document.querySelector('.lb-next');
+
+  let currentIndex = 0;
+
+  function openLightbox(index) {
+    currentIndex = index;
+    lightboxImg.src = images[currentIndex].src;
+    lightbox.style.display = 'flex';
+  }
+
+  images.forEach((img, index) => {
+    img.style.cursor = 'zoom-in';
+    img.addEventListener('click', () => {
+      openLightbox(index);
+    });
+  });
+
+  prevBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    currentIndex = (currentIndex - 1 + images.length) % images.length;
+    lightboxImg.src = images[currentIndex].src;
+  });
+
+  nextBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    currentIndex = (currentIndex + 1) % images.length;
+    lightboxImg.src = images[currentIndex].src;
+  });
+
+  lightbox.addEventListener('click', () => {
+    lightbox.style.display = 'none';
+  });
+});
+</script>
+
+
+</body>
+</html>
