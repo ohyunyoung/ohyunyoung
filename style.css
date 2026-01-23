@@ -79,7 +79,7 @@ p {
 
 .ex-thumb {
   width: 100%;
-  aspect-ratio: 3 / 4; /* 포스터 비율 통일 (핵심) */
+  aspect-ratio: 3 / 4; /* 포스터 비율 통일 */
  border-radius: 20px;  /* 둥근 모서리 */
   overflow: hidden;
 }
@@ -175,31 +175,55 @@ p {
   display: block;
 }
 
-/* 화살표 공통 */
-#lightbox button {
-  position: absolute;
+
+/* =========================
+화살표 버튼
+   ========================= */
+/* 화살표 공통(동그라미 버튼) */
+#lightbox button{
+  position: fixed;
   top: 50%;
   transform: translateY(-50%);
 
-  background: none;
-  border: none;
-  color: #ffffff;
-  font-size: 32px;
-  padding: 16px;
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+
+  /* 약간 투명 */
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.45);
+
+  color: rgba(255,255,255,0.95);
+
+  display: grid;
+  place-items: center;
+
+  font-size: 28px;
+  line-height: 1;
+  padding: 0;
   cursor: pointer;
-
   user-select: none;
+
+  z-index: 10000;
+
+  /* 버튼 블러 */
+  backdrop-filter: blur(6px);
 }
 
-/* 이미지 기준 왼쪽 */
-.lb-prev {
-  left: -48px;
+#lightbox button:hover{
+  background: rgba(0,0,0,0.35);
+  border-color: rgba(255,255,255,0.65);
 }
 
-/* 이미지 기준 오른쪽 */
-.lb-next {
-  right: -48px;
+#lightbox button:active{
+  transform: translateY(-50%) scale(0.94);
 }
+
+/* ✅ 위치 조정은 여기 숫자만 */
+.lb-prev{ left: 210px; }  /* 더 안쪽 = 숫자 크게 */
+.lb-next{ right: 210px; } /* 더 안쪽 = 숫자 크게 */
+
+
 
 #lightbox button:hover {
   opacity: 0.6;
@@ -398,11 +422,6 @@ p {
   cursor: grabbing;
 }
 
-/* ===== Suika: explode animation ===== */
-.emoji-sticker.exploding{
-  pointer-events: none;
-  animation: explodePop 380ms ease-out forwards;
-}
 
 @keyframes explodePop{
   0%   { transform: translate(-50%, -50%) scale(1);   opacity: 1; filter: blur(0px); }
@@ -410,3 +429,49 @@ p {
 }
 
 
+/* 바닥에 가라앉는 스티커 */
+.emoji-sticker.grounded{
+  animation: none !important;
+  transition: top 700ms ease-out;   
+  position: fixed;                 
+}
+
+/*transition 끔 */
+.emoji-sticker.grounded.dragging{
+  transition: none !important;
+}
+
+
+/* 드래그 잔상 */
+.emoji-trail{
+  position: fixed;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  opacity: 0.55;
+  filter: blur(0.6px);
+  transition: opacity 320ms ease, transform 320ms ease;
+  z-index: 50000; /* 스티커(99999)보다 아래로 */
+}
+
+.emoji-trail.fade{
+  opacity: 0;
+  transform: translate(-50%, -50%) translateY(10px) scale(0.98);
+}
+
+
+
+/* 다중 잔상 조각 */
+.emoji-trail-seg{
+  position: fixed;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  user-select: none;
+  z-index: 50000;       /* 스티커(99999)보다 아래 */
+  will-change: left, top;
+}
+
+/* 날아가는 동안: 물리 오브젝트처럼*/
+.emoji-sticker.grounded.flying{
+  transition: none !important;
+  filter: none !important;
+}

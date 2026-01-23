@@ -14,7 +14,6 @@
 
     <div class="speech-bubble">
       <p>안녕하세요. 오윤영입니다.</p>
-      <p>전시를 기획하고 있습니다.</p>
       <p>방문해 주셔서 감사합니다.</p>
 
       <button class="bubble-emoji-btn" type="button" aria-label="smile">☺</button>
@@ -31,7 +30,8 @@
     </div>
   </div>
 
- <script>
+ 
+<script>
 (function () {
   const btn = document.querySelector(".bubble-emoji-btn");
   const bubble = document.querySelector(".speech-bubble");
@@ -42,13 +42,37 @@
   let clickCount = 0;
   let stickerMode = false;
 
-  // ===== 스티커/수박 합체 설정 =====
+  // ===== 스티커 합체 설정 =====
   const BASE_SIZE = 20;
   const GROW = 10;
   const MAX_LEVEL = 5;
   const RISE_Y = 70;
   const MERGE_DIST = 26;
   const MERGE_COOLDOWN_MS = 80;
+
+  // ===== 지면 =====
+  const GROUND_PAD = 200;
+
+  function groundYFor(el){
+    const h = el.getBoundingClientRect().height || 0;
+    return window.innerHeight - GROUND_PAD - h / 2;
+  }
+  function clampToGround(el, y){
+    return Math.min(y, groundYFor(el));
+  }
+  function fallToGround(el){
+    if (!el || !document.body.contains(el)) return;
+    const gy = groundYFor(el);
+    const cur = parseFloat(el.style.top) || 0;
+    el.style.top = Math.min(cur, gy) + "px";
+    requestAnimationFrame(() => {
+      if (!document.body.contains(el)) return;
+      el.style.top = gy + "px";
+    });
+  }
+  window.addEventListener("resize", () => {
+    document.querySelectorAll(".emoji-sticker.grounded").forEach(fallToGround);
+  });
 
   const emojis = [
     "🍀","✨","💛","🌿","🫧","⭐","💫","🐈","🦕","🔥","🌈","🏆","🎁","🎉","💕","💥","💡","💣","☃️","🍿",
@@ -64,17 +88,14 @@
   }
 
   function sizeForLevel(level){
-    return BASE_SIZE + (level - 1) * GROW;
+    const base = BASE_SIZE + (level - 1) * GROW;
+    if (level >= MAX_LEVEL) return base + 20; // 최종만 +20
+    return base;
   }
 
   function getCenter(el){
     const r = el.getBoundingClientRect();
     return { x: r.left + r.width/2, y: r.top + r.height/2 };
-  }
-
-  function explode(el){
-    el.classList.add("exploding");
-    el.addEventListener("animationend", () => el.remove(), { once: true });
   }
 
   function bakeStickerPosition(el){
@@ -114,10 +135,29 @@
     return el;
   }
 
-  // 같은 이모지면 레벨 달라도 합체 (새 레벨 = max + 1)
+  function makeGroundedAt(x, y, emoji, level){
+    const el = document.createElement("span");
+    el.className = "emoji-pop emoji-sticker grounded";
+    el.textContent = emoji;
+    el.dataset.level = String(level);
+    el.dataset.grounded = "1";
+
+    el.style.left = x + "px";
+    el.style.top  = y + "px";
+    el.style.fontSize = sizeForLevel(level) + "px";
+    el.style.animation = "none";
+    el.style.filter = "none";
+    el.style.opacity = "1";
+
+    document.body.appendChild(el);
+    fallToGround(el);
+    return el;
+  }
+
   function tryMerge(target){
     if (!target || !target.classList.contains("emoji-sticker")) return;
     if (!document.body.contains(target)) return;
+    if (target.dataset.grounded === "1") return;
 
     const emoji = (target.textContent || "").trim();
     const level = parseInt(target.dataset.level || "1", 10);
@@ -130,6 +170,7 @@
     document.querySelectorAll(".emoji-sticker").forEach((el) => {
       if (el === target) return;
       if (!document.body.contains(el)) return;
+      if (el.dataset.grounded === "1") return;
       if ((el.textContent || "").trim() !== emoji) return;
 
       const lv = parseInt(el.dataset.level || "1", 10);
@@ -159,8 +200,7 @@
     const newLevel = Math.max(level, bestLevel) + 1;
 
     if (newLevel >= MAX_LEVEL) {
-      const boom = makeStickerAt(mx, my, emoji, newLevel);
-      explode(boom);
+      makeGroundedAt(mx, my, emoji, newLevel);
       return;
     }
 
@@ -211,27 +251,216 @@
   // 클릭: 7번째부터 스티커 모드
   btn.addEventListener("click", () => {
     clickCount += 1;
-
     if (clickCount === 7) {
       stickerMode = true;
       bubble.classList.add("sticker-on");
       showToast(1600);
     }
-
     spawnEmoji(stickerMode);
   });
 
-  // 비우기
+  // ====== 여기부터 "동시 여러개 잔상" 해결 ======
+
+  // ===== 잔상(요소별로 분리) =====
+  const TRAIL_COUNT = 10;
+  const trails = new Map(); // key: emoji element, value: {segs,pos,head}
+  let trailsRaf = 0;
+
+  function trailStart(el){
+    if (!el || trails.has(el)) return;
+
+    const emoji = (el.textContent || "").trim();
+    const fs = el.style.fontSize || "20px";
+    const x = parseFloat(el.style.left) || 0;
+    const y = parseFloat(el.style.top)  || 0;
+
+    const pos = Array.from({ length: TRAIL_COUNT }, () => ({ x, y }));
+    const head = { x, y };
+    const segs = [];
+
+    for (let i = 0; i < TRAIL_COUNT; i++) {
+      const s = document.createElement("span");
+      s.className = "emoji-trail-seg";
+      s.textContent = emoji;
+      s.style.left = x + "px";
+      s.style.top  = y + "px";
+      s.style.fontSize = fs;
+
+      const alpha = 0.55 * (1 - i / TRAIL_COUNT);
+      s.style.opacity = String(alpha);
+      s.style.filter = `blur(${0.2 + i * 0.12}px)`;
+
+      document.body.appendChild(s);
+      segs.push(s);
+    }
+
+    trails.set(el, { segs, pos, head });
+
+    if (!trailsRaf) trailsRaf = requestAnimationFrame(stepAllTrails);
+  }
+
+  function trailUpdate(el, x, y){
+    const st = trails.get(el);
+    if (!st) return;
+    st.head.x = x;
+    st.head.y = y;
+  }
+
+  function trailStop(el){
+    const st = trails.get(el);
+    if (!st) return;
+    st.segs.forEach(s => s.remove());
+    trails.delete(el);
+
+    if (trails.size === 0 && trailsRaf) {
+      cancelAnimationFrame(trailsRaf);
+      trailsRaf = 0;
+    }
+  }
+
+  function trailStopAll(){
+    Array.from(trails.keys()).forEach(trailStop);
+  }
+
+  function stepAllTrails(){
+    trails.forEach((st, el) => {
+      if (!document.body.contains(el)) {
+        st.segs.forEach(s => s.remove());
+        trails.delete(el);
+        return;
+      }
+
+      // 첫 잔상은 실물과 같은 위치
+      st.pos[0].x = st.head.x;
+      st.pos[0].y = st.head.y;
+
+      // 뒤는 따라오게
+      for (let i = 1; i < TRAIL_COUNT; i++) {
+        st.pos[i].x += (st.pos[i-1].x - st.pos[i].x) * 0.14;
+        st.pos[i].y += (st.pos[i-1].y - st.pos[i].y) * 0.14;
+      }
+
+      for (let i = 0; i < st.segs.length; i++) {
+        const s = st.segs[i];
+        s.style.left = st.pos[i].x + "px";
+        s.style.top  = st.pos[i].y + "px";
+      }
+    });
+
+    if (trails.size > 0) {
+      trailsRaf = requestAnimationFrame(stepAllTrails);
+    } else {
+      trailsRaf = 0;
+    }
+  }
+
+  // ===== 날아가기(요소별 물리) =====
+  const GRAVITY = 2200;
+  const BOUNCE = 0.72;
+  const WALL_BOUNCE = 0.85;
+  const AIR_FRICTION = 0.992;
+  const STOP_V = 35;
+  const MAX_SPEED = 2200;
+
+  const flights = new Map(); // key: el, value: raf
+
+  function stopFlight(el){
+    const raf = flights.get(el);
+    if (raf) cancelAnimationFrame(raf);
+    flights.delete(el);
+    if (el) el.classList.remove("flying");
+  }
+
+  function startFlight(el, vx, vy){
+    if (!el || !document.body.contains(el)) return;
+
+    stopFlight(el);
+    trailStart(el); // 이모지마다 잔상 시작
+
+    vx = Math.max(-MAX_SPEED, Math.min(MAX_SPEED, vx));
+    vy = Math.max(-MAX_SPEED, Math.min(MAX_SPEED, vy));
+
+    el.classList.add("flying");
+
+    let last = performance.now();
+
+    const step = (now) => {
+      if (!document.body.contains(el)) {
+        trailStop(el);
+        stopFlight(el);
+        return;
+      }
+
+      const dt = Math.min(0.033, (now - last) / 1000);
+      last = now;
+
+      let x = parseFloat(el.style.left) || 0;
+      let y = parseFloat(el.style.top)  || 0;
+
+      vy += GRAVITY * dt;
+      x += vx * dt;
+      y += vy * dt;
+
+      const w = el.getBoundingClientRect().width || 0;
+      const h = el.getBoundingClientRect().height || 0;
+      const pad = 10;
+
+      const minX = pad + w/2;
+      const maxX = window.innerWidth - pad - w/2;
+
+      const minY = pad + h/2;
+      const maxY = groundYFor(el);
+
+      if (x <= minX) { x = minX; vx = -vx * WALL_BOUNCE; }
+      if (x >= maxX) { x = maxX; vx = -vx * WALL_BOUNCE; }
+
+      if (y <= minY) { y = minY; vy = -vy * BOUNCE; }
+      if (y >= maxY) { y = maxY; vy = -vy * BOUNCE; vx *= 0.98; }
+
+      vx *= AIR_FRICTION;
+      vy *= AIR_FRICTION;
+
+      el.style.left = x + "px";
+      el.style.top  = y + "px";
+
+      // ✅ 이모지별 잔상 업데이트
+      trailUpdate(el, x, y);
+
+      if (Math.abs(vx) < STOP_V && Math.abs(vy) < STOP_V && y >= maxY - 1) {
+        el.classList.remove("flying");
+        fallToGround(el);
+        trailStop(el);
+        stopFlight(el);
+        return;
+      }
+
+      const raf = requestAnimationFrame(step);
+      flights.set(el, raf);
+    };
+
+    const raf = requestAnimationFrame(step);
+    flights.set(el, raf);
+  }
+
+  // 비우기: 이모지/잔상/날아가기 다 정리
   if (cleanBtn) {
     cleanBtn.addEventListener("click", () => {
       document.querySelectorAll(".emoji-sticker").forEach(el => el.remove());
+      trailStopAll();
+      Array.from(flights.keys()).forEach(stopFlight);
     });
   }
 
-  // 스티커 드래그 + 놓으면 합체 체크
+  // 드래그 + 놓으면(grounded면) 날아가기
   let draggingEl = null;
   let offsetX = 0;
   let offsetY = 0;
+
+  let lastMoveT = 0;
+  let lastMoveX = 0;
+  let lastMoveY = 0;
+  let velX = 0;
+  let velY = 0;
 
   document.addEventListener("pointerdown", (e) => {
     const t = e.target;
@@ -239,11 +468,24 @@
     if (!t.classList.contains("emoji-sticker")) return;
 
     draggingEl = t;
+    stopFlight(draggingEl);
+
     const left = parseFloat(draggingEl.style.left) || 0;
     const top  = parseFloat(draggingEl.style.top)  || 0;
 
     offsetX = e.clientX - left;
     offsetY = e.clientY - top;
+
+    lastMoveT = performance.now();
+    lastMoveX = left;
+    lastMoveY = top;
+    velX = 0; velY = 0;
+
+    if (draggingEl.classList.contains("grounded")) {
+      draggingEl.classList.add("dragging");
+      trailStart(draggingEl);
+      trailUpdate(draggingEl, left, top);
+    }
 
     draggingEl.setPointerCapture(e.pointerId);
   });
@@ -256,21 +498,50 @@
 
     const pad = 10;
     x = Math.max(pad, Math.min(window.innerWidth  - pad, x));
-    y = Math.max(pad, Math.min(window.innerHeight - pad, y));
+    y = Math.max(pad, clampToGround(draggingEl, y));
 
     draggingEl.style.left = x + "px";
     draggingEl.style.top  = y + "px";
+
+    const now = performance.now();
+    const dt = Math.max(0.001, (now - lastMoveT) / 1000);
+    velX = (x - lastMoveX) / dt;
+    velY = (y - lastMoveY) / dt;
+    lastMoveT = now;
+    lastMoveX = x;
+    lastMoveY = y;
+
+    if (draggingEl.classList.contains("grounded")) {
+      trailUpdate(draggingEl, x, y);
+    }
   });
 
   document.addEventListener("pointerup", () => {
     if (!draggingEl) return;
+
+    if (document.body.contains(draggingEl) && draggingEl.classList.contains("grounded")) {
+      draggingEl.classList.remove("dragging");
+      startFlight(draggingEl, velX, velY);
+      draggingEl = null;
+      return;
+    }
+
     tryMerge(draggingEl);
     draggingEl = null;
   });
 
+  document.addEventListener("pointercancel", () => {
+    if (!draggingEl) return;
 
+    if (draggingEl.classList.contains("grounded")) {
+      draggingEl.classList.remove("dragging");
+      fallToGround(draggingEl);
+      trailStop(draggingEl);
+    }
 
-    })();
-  </script>
-</body>
-</html>
+    draggingEl = null;
+  });
+
+})();
+</script>
+
