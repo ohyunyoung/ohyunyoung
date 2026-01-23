@@ -259,9 +259,8 @@
     spawnEmoji(stickerMode);
   });
 
-  // ====== 여기부터 "동시 여러개 잔상" 해결 ======
 
-  // ===== 잔상(요소별로 분리) =====
+  // ===== 잔상 =====
   const TRAIL_COUNT = 10;
   const trails = new Map(); // key: emoji element, value: {segs,pos,head}
   let trailsRaf = 0;
@@ -354,7 +353,7 @@
     }
   }
 
-  // ===== 날아가기(요소별 물리) =====
+  // ===== 날아가기 =====
   const GRAVITY = 2200;
   const BOUNCE = 0.72;
   const WALL_BOUNCE = 0.85;
@@ -423,7 +422,7 @@
       el.style.left = x + "px";
       el.style.top  = y + "px";
 
-      // ✅ 이모지별 잔상 업데이트
+      // 이모지별 잔상
       trailUpdate(el, x, y);
 
       if (Math.abs(vx) < STOP_V && Math.abs(vy) < STOP_V && y >= maxY - 1) {
@@ -442,7 +441,7 @@
     flights.set(el, raf);
   }
 
-  // 비우기: 이모지/잔상/날아가기 다 정리
+  // 비우기
   if (cleanBtn) {
     cleanBtn.addEventListener("click", () => {
       document.querySelectorAll(".emoji-sticker").forEach(el => el.remove());

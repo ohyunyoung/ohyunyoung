@@ -219,7 +219,7 @@ p {
   transform: translateY(-50%) scale(0.94);
 }
 
-/* ✅ 위치 조정은 여기 숫자만 */
+/* 위치 조정 */
 .lb-prev{ left: 210px; }  /* 더 안쪽 = 숫자 크게 */
 .lb-next{ right: 210px; } /* 더 안쪽 = 숫자 크게 */
 
@@ -329,7 +329,7 @@ p {
   100% { transform: translate(-50%, -50%) translate(var(--drift-x, 0px), -70px) scale(1.15); opacity: 0; filter: blur(1.5px); }
 }
 
-/* 스티커: 올라가지만 '선명' 유지 */
+/* 스티커: 올라감 */
 @keyframes floatUpSticker{
   0%   { transform: translate(-50%, -50%) translate(0, 0) scale(1); opacity: 1; filter: none; }
   100% { transform: translate(-50%, -50%) translate(var(--drift-x, 0px), -70px) scale(1.12); opacity: 1; filter: none; }
@@ -358,7 +358,7 @@ p {
   transform: translateY(0);
 }
 
-/* 7번째에 잠깐 뜨는 문구 스티커모드on */
+/* 7번째 뜨는 문구 */
 .sticker-toast {
   position: absolute;
   right: -160px;
@@ -380,7 +380,7 @@ p {
   transform: translateY(-50%) translateY(-6px);
 }
 
-/* 스티커 모드일 때만 보이는 비우기 버튼 */
+/* 비우기 버튼 */
 .clean-btn {
   position: absolute;
   right: -800px;
@@ -405,7 +405,7 @@ p {
   display: inline-block;
 }
 
-/* 사라지는 이모지(드래그 불필요) */
+/* 사라지는 이모지 */
 .emoji-float {
   pointer-events: none;
 }
